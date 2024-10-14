@@ -1,0 +1,147 @@
+---
+title: "Homeworkassignment1"
+author: "Taha Abbasi-Hashemi"
+output: pdf_document
+---
+
+
+# Q1
+```{r}
+library(tidyverse)
+library(babynames)
+library(datadictionary)
+library(tinytex)
+```
+
+# Q2
+5 variables
+1924665 observations
+
+```{r}
+names <- babynames
+names_og <- babynames
+babynames
+```
+# Q3
+```{r}
+names.labels <- c(year="Year of Birth",
+                  sex="sex of name",
+                  name="name of child",
+                  n="number of children born with that name in that year",
+                  prop="proportion of the total births with this name")
+names_dict <- create_dictionary(names, var_labels = names.labels)
+```
+# Q4
+range
+```{r}
+min(names["year"])
+max(names["year"])
+```
+# Q5
+```{r}
+names <- names[, -which(names(names) == "n")]
+```
+
+# Q6
+Allows for potentially normalized viewage of names. Because what will happen is as time moves on, there will be different number of births. n=1000 might mean alot in the past, but not so much now. 
+
+# Q7
+ Using the object created in Question 5, what was the most popular name for both sexes
+in: a) the 2nd millennium? and b) the 3rd millennium?
+
+John then Jacob
+
+```{r}
+names_2nd <- names[names$year >= 1900 & names$year < 2000, ]
+names_3rd <- names[names$year > 2000, ]
+
+max_prop_2nd <- names_2nd[which.max(names_2nd$prop), ]
+max_prop_3rd <- names_3rd[which.max(names_3rd$prop), ]
+
+# View the result
+print(max_prop_2nd)
+print(max_prop_3rd)
+```
+
+# Q8
+I can use grep interestingly enough
+I originally wanted to try using regex.
+quinn, victoria, xavier
+```{r}
+names_q <- names_3rd[names_3rd$year >= 2000 & names_3rd$year <= 2012 & grepl("^[Q]",
+                          names_3rd$name, ignore.case = TRUE), ]
+
+names_v <- names_3rd[names_3rd$year >= 2000 & names_3rd$year <= 2012 & grepl("^[V]",
+                          names_3rd$name, ignore.case = TRUE), ]
+
+names_x <- names_3rd[names_3rd$year >= 2000 & names_3rd$year <= 2012 & grepl("^[X]",
+                          names_3rd$name, ignore.case = TRUE), ]
+max_prop_3rd <- names_q[which.max(names_q$prop), ]
+print(max_prop_3rd)
+max_prop_3rd <- names_v[which.max(names_v$prop), ]
+print(max_prop_3rd)
+max_prop_3rd <- names_x[which.max(names_x$prop), ]
+print(max_prop_3rd)
+```
+# Q9
+I dont know if I'm doing this right. So I wanted to merge all names together within the decade. SO if there was a mary in 1800 and 1801, the N would be added together. I didnt know what do with prop so I just took the mean. 
+```{r}
+names_og$decade <- floor(names_og$year / 10) * 10
+names_by_decade <- aggregate(cbind(n, prop) ~ name + sex + decade, data = names_og, 
+                                 FUN = function(x) c(sum = sum(x), avg = mean(x)))
+
+```
+
+# Q10
+This should get the mean and median value for n across sex and decade. 
+```{r}
+mean_median_by_decade_sex <- aggregate(n ~ sex + decade, data = names_og, 
+                                       FUN = function(x) c(mean = mean(x), median = median(x)))
+
+mean_median_by_decade_sex <- do.call(data.frame, mean_median_by_decade_sex)
+names(mean_median_by_decade_sex)[3:4] <- c("mean_n", "median_n")
+print(mean_median_by_decade_sex)
+```
+
+
+# Q11
+I wrote a function do this.
+I doubt Taha and Baraa have been the most popular name of a baby in the USA from 1800-2017...
+If they are never the most popular it returns "never","never"
+
+```{r}
+find_most_popular <- function(name_input) {
+  
+  # MAke decade
+  names_og$decade <- floor(names_og$year / 10) * 10
+    most_popular_each_year <- names_og %>%
+    group_by(year) %>%
+    filter(n == max(n)) %>%
+    ungroup()
+    
+  
+  most_popular_for_name <- most_popular_each_year[most_popular_each_year$name == name_input, ]
+  
+  # I doubt Taha and Baraa have been the most popular name of a baby in the USA from 1800-2017...
+  if (nrow(most_popular_for_name) == 0) {
+    return(c("never", "never"))
+  }
+  return(most_popular_for_name[, c("decade", "year")])
+}
+
+# Results
+find_most_popular("Taha")
+find_most_popular("Baraa")
+find_most_popular("Mike")
+find_most_popular("Jack")
+find_most_popular("Scott")
+
+# Testing.... 
+find_most_popular("Mary")
+find_most_popular("John")
+
+```
+
+
+
+

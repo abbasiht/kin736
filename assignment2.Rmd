@@ -1,0 +1,74 @@
+---
+title: "taha_assignment2"
+output: pdf_document
+author: "Taha Abbasi-Hashemi"
+date: "2024-10-08"
+---
+
+```{r}
+library(tidyverse)
+library(babynames)
+library(datadictionary)
+library(tinytex)
+library(stringr)
+```
+
+# Part A
+1,2. 
+When I only look at the data it isnt clear what is actually being shown here. My first instinct was to assume that this was the number of males or females. 
+
+I believe this is an issue of being too wide and not long enough. I would revise this to have multiple rows, where each row indicates the race, gender and a column representing "number of words spoken". 
+
+This might also be an instance where the data is too separated. For instance it might make sense to unite the data and have Man be shown as male/female. 
+
+I know lord of the rings is famous for having very few women talking, and there is no instance of a woman talking to another woman, but was there actually no human women talking in the first movie? It doesnt seem to be explicitly or implicitly missing, but sometimes I have seen NA values appear as a 0 instead. 
+
+Another thing I noticed is that male is sometimes lowercase and sometimes uppercase... 
+
+Also the movie The column name movie isnt capitalized. 
+```{r}
+df <- read.csv('lord-of-the-rings-trilogy.csv')
+
+print(df)
+```
+
+3. If the dataset was tidy there would be 4 columns and 18 rows. 
+4. The columns I would have are Movie, Race, Gender and Words_Spoken. 
+# Part B
+1. 
+
+```{r}
+tidy_df <- df %>%
+  pivot_longer(cols = -movie, names_to = c("Race", "Gender"), names_sep = "_", values_to = "Words_Spoken") %>% # reduce column numbers
+  mutate(Race = str_to_title(Race), Gender = str_to_title(Gender)) # Make genders and race all title case
+colnames(tidy_df) <- str_to_title(colnames(tidy_df)) # make all columsn title case
+print(tidy_df)
+```
+
+
+```{r}
+#tw <- tidy_df %>% 
+#  group_by(Movie) %>%
+#  filter(Race == "Elf") %>%
+#  filter(Gender=="Female")
+tw <- tidy_df %>% 
+  group_by(Race, Gender)
+tw <- tw %>% select(-Movie)
+tw %>%summarise(sum = sum(Words_spoken))
+
+tr <-tidy_df %>% group_by(Movie, Race)
+tr %>%summarise(sum = sum(Words_spoken))
+```
+
+2. Male Hobits :8780
+Female Elves: 1743
+Male Elves: 1994
+
+3. Yes hobbits in the 1st, but then Man in the 2nd and 3rd movie. 
+
+4. Yes the dominant race depends on the movie. 
+
+
+
+
+
